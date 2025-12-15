@@ -3,37 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { differenceInDays } from 'date-fns';
-import { Brain, BrainCircuit, HelpCircle, History, LogOut, MoreVertical, Shield, Trophy, User as UserIcon } from 'lucide-react';
+import { BrainCircuit, HelpCircle, LogOut, MoreVertical, User as UserIcon, Shield, Trophy, History } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import type { TestAttempt, UserProfile } from '@/lib/types';
-import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory, clearUserData } from '@/lib/store';
+import type { UserProfile, TestAttempt } from '@/lib/types';
+import { getLatestTestAttempt, getUserProfile, getTestHistory, clearUserData } from '@/lib/store';
 import { Logo } from '@/components/Logo';
 
 const RETAKE_COOLDOWN_DAYS = 7;
 
-function StatCard({ icon, title, value, description }: { icon: React.ReactNode, title: string, value: string, description: string }) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [latestAttempt, setLatestAttempt] = useState<TestAttempt | null>(null);
-  const [bestAttempt, setBestAttempt] = useState<TestAttempt | null>(null);
   const [history, setHistory] = useState<TestAttempt[]>([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -44,8 +28,6 @@ export default function DashboardPage() {
       router.replace('/onboarding');
     } else {
       setUser(profile);
-      setLatestAttempt(getLatestTestAttempt());
-      setBestAttempt(getBestValidTestAttempt());
       setHistory(getTestHistory());
     }
   }, [router]);
@@ -75,11 +57,6 @@ export default function DashboardPage() {
     router.push('/test');
   };
   
-  const displayBestScore = bestAttempt?.iqScore ?? 'N/A';
-  const displayLastScore = latestAttempt?.iqScore ?? 'N/A';
-  const displayValidity = latestAttempt?.validityReport?.status ?? 'N/A';
-
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="p-4 border-b">
@@ -95,7 +72,7 @@ export default function DashboardPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                  <DropdownMenuItem onClick={() => router.push('/overview')}>
                     <BrainCircuit className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
                   </DropdownMenuItem>
@@ -113,58 +90,41 @@ export default function DashboardPage() {
             </div>
          </div>
       </header>
-      <main className="container mx-auto p-4 md:p-8">
-        <div className="space-y-8">
+      <main className="container mx-auto p-4 md:p-8 flex justify-center">
+        <div className="space-y-8 w-full max-w-2xl">
           <Card className="w-full">
             <CardHeader>
-              <CardTitle className="text-3xl font-bold">Your Cognitive Snapshot</CardTitle>
+              <CardTitle className="text-3xl font-bold">Ready for a Challenge?</CardTitle>
               <CardDescription>
-                {history.length > 0 ? 'Here are your latest results. Keep challenging yourself!' : 'Ready to discover your cognitive potential? Start your first test now.'}
+                {history.length > 0 ? 'Challenge yourself again or practice your skills.' : 'Start your first test to discover your cognitive potential.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <StatCard 
-                    icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
-                    title="Best Valid IQ"
-                    value={`${displayBestScore}`}
-                    description="Your highest valid score."
-                  />
-                  <StatCard 
-                    icon={<History className="h-4 w-4 text-muted-foreground" />}
-                    title="Last IQ Score"
-                    value={`${displayLastScore}`}
-                    description={latestAttempt?.isPractice ? 'From a practice attempt.' : 'From your most recent attempt.'}
-                  />
-                  <StatCard 
-                    icon={<Shield className="h-4 w-4 text-muted-foreground" />}
-                    title="Last Test Validity"
-                    value={displayValidity}
-                    description="Confidence in your last result."
-                  />
-                  <StatCard 
-                    icon={<Brain className="h-4 w-4 text-muted-foreground" />}
-                    title="Tests Taken"
-                    value={`${history.length}`}
-                    description="Total number of attempts."
-                  />
+                <div className="flex flex-col items-center justify-center p-6 bg-primary/5 rounded-lg border border-primary/20">
+                    <h2 className="text-2xl font-semibold mb-4">
+                      {history.length === 0 ? 'Start Your First Ranked Test' : (canTakeRanked ? 'Start a New Ranked Test' : 'Start a Practice Test')}
+                    </h2>
+                     <p className="text-muted-foreground text-center mb-6">
+                        {canTakeRanked 
+                            ? "This is a ranked attempt and will count towards your best score." 
+                            : "This is a practice attempt and will not affect your best score."
+                        }
+                    </p>
+                     <Button onClick={handleStartTest} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
+                        {history.length === 0 ? 'Start First Test' : 'Start Test'}
+                     </Button>
+                     {!canTakeRanked && (
+                        <p className="text-sm text-muted-foreground pt-4 text-center">
+                          You can take a new ranked test in {RETAKE_COOLDOWN_DAYS - daysSinceLastRankedAttempt} day(s).
+                        </p>
+                    )}
                 </div>
             </CardContent>
-            <CardFooter className="flex-col sm:flex-row gap-2 items-start pt-6">
-              <Button onClick={handleStartTest} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
-                {history.length === 0 ? 'Start First Test' : (canTakeRanked ? 'Start Ranked Test' : 'Start Practice Test')}
-              </Button>
-              {!canTakeRanked && (
-                <p className="text-sm text-muted-foreground pt-2">
-                  You can take a new ranked test in {RETAKE_COOLDOWN_DAYS - daysSinceLastRankedAttempt} day(s). Practice tests are always available.
-                </p>
-              )}
-            </CardFooter>
           </Card>
           
           <Card>
               <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><HelpCircle className="text-primary"/> Understanding Your Score</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><HelpCircle className="text-primary"/> Test Instructions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                   <p><strong className="text-foreground">IQ Score:</strong> This is a normalized score based on your performance relative to your age group. The average IQ is 100.</p>
