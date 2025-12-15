@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { differenceInDays } from 'date-fns';
 
 import type { AnswerRecord, GeneratedQuestion, Question, TestAttempt, UserProfile } from '@/lib/types';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
@@ -20,6 +21,7 @@ import { Logo } from '@/components/Logo';
 import {generateDynamicTest} from '@/ai/flows/generate-dynamic-test';
 
 const NUMBER_OF_QUESTIONS = 20;
+const RETAKE_COOLDOWN_DAYS = 7;
 
 const DOMAIN_MIX = {
   logical: 0.3,
@@ -104,7 +106,9 @@ function QuestionCard({
               onClick={() => handleSelect(option)}
               disabled={!!selected}
               variant={selected === option ? "default" : "outline"}
-              className="h-auto min-h-12 py-3 justify-start text-left whitespace-normal text-base"
+              className={`h-auto min-h-12 py-3 justify-start text-left whitespace-normal text-base transition-colors duration-300 ${
+                selected && (selected === option ? 'bg-primary text-primary-foreground' : 'bg-muted/50')
+              }`}
             >
               <div className="flex items-center gap-4">
                 <span className="text-sm font-bold border rounded-md h-6 w-6 flex items-center justify-center">{index+1}</span>
@@ -124,6 +128,7 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [test, setTest] = useState<GeneratedQuestion[] | null>(null);
+  const [isPractice, setIsPractice] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
   const [testStartTime, setTestStartTime] = useState(0);
@@ -138,16 +143,27 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
       return;
     }
     setUser(profile);
+
+    const history = getTestHistory();
+    const lastRankedAttempt = history.find(a => !a.isPractice);
+    const daysSinceLastRankedAttempt = lastRankedAttempt
+      ? differenceInDays(new Date(), new Date(lastRankedAttempt.completedAt))
+      : RETAKE_COOLDOWN_DAYS + 1;
+    
+    // It's practice if it's not their first test AND they can't take a ranked one yet
+    setIsPractice(history.length > 0 && daysSinceLastRankedAttempt < RETAKE_COOLDOWN_DAYS);
+
   }, [router]);
 
   useEffect(() => {
     if (user && !test) {
       const getTest = async () => {
         try {
-          const isRetake = getTestHistory().length > 0;
+          const history = getTestHistory();
           let currentDomainMix = { ...DOMAIN_MIX };
 
-          if (isRetake) {
+          // Shuffle domain mix for any retake (practice or ranked)
+          if (history.length > 0) {
               const domains = shuffle(Object.keys(currentDomainMix));
               const percentages = shuffle(Object.values(currentDomainMix));
               currentDomainMix = domains.reduce((acc, domain, index) => {
@@ -155,7 +171,6 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
                 return acc;
               }, {} as typeof DOMAIN_MIX);
           }
-
 
           const { questions } = await generateDynamicTest({
             ageBand: user.age.toString(), // Simplified for example
@@ -193,16 +208,16 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
       iqScore,
       startedAt: new Date(testStartTime).toISOString(),
       completedAt: new Date().toISOString(),
-      isPractice: getTestHistory().length > 0
+      isPractice,
     };
 
     addTestAttempt(newAttempt);
     router.replace(`/results/${newAttempt.id}`);
 
-  }, [user, test, testStartTime, visibilityChanges, router, isFinishing]);
+  }, [user, test, testStartTime, visibilityChanges, router, isFinishing, isPractice]);
 
   const handleAnswer = useCallback((answer: string | null) => {
-    if (!test) return;
+    if (!test || isFinishing) return;
 
     const timeTaken = (Date.now() - questionStartTime) / 1000;
     const currentQuestion = test[currentQuestionIndex];
@@ -223,7 +238,7 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
     } else {
       finishTest(updatedAnswers);
     }
-  }, [test, questionStartTime, currentQuestionIndex, answers, finishTest]);
+  }, [test, questionStartTime, currentQuestionIndex, answers, finishTest, isFinishing]);
 
   const currentQuestion = useMemo(() => test?.[currentQuestionIndex], [test, currentQuestionIndex]);
 

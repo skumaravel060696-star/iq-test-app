@@ -6,7 +6,7 @@ import { differenceInDays } from 'date-fns';
 import { Brain, BrainCircuit, HelpCircle, History, Shield, Trophy } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import type { TestAttempt, UserProfile } from '@/lib/types';
 import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory } from '@/lib/store';
 import { Logo } from '@/components/Logo';
@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [latestAttempt, setLatestAttempt] = useState<TestAttempt | null>(null);
   const [bestAttempt, setBestAttempt] = useState<TestAttempt | null>(null);
+  const [history, setHistory] = useState<TestAttempt[]>([]);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function DashboardPage() {
       setUser(profile);
       setLatestAttempt(getLatestTestAttempt());
       setBestAttempt(getBestValidTestAttempt());
+      setHistory(getTestHistory());
     }
   }, [router]);
 
@@ -55,18 +57,21 @@ export default function DashboardPage() {
     );
   }
 
-  const daysSinceLastAttempt = latestAttempt
-    ? differenceInDays(new Date(), new Date(latestAttempt.completedAt))
-    : RETAKE_COOLDOWN_DAYS + 1;
+  const lastRankedAttempt = history.find(a => !a.isPractice);
 
-  const canRetake = daysSinceLastAttempt >= RETAKE_COOLDOWN_DAYS;
+  const daysSinceLastRankedAttempt = lastRankedAttempt
+    ? differenceInDays(new Date(), new Date(lastRankedAttempt.completedAt))
+    : RETAKE_COOLDOWN_DAYS + 1;
+  
+  const canTakeRanked = daysSinceLastRankedAttempt >= RETAKE_COOLDOWN_DAYS;
 
   const handleStartTest = () => {
     router.push('/test');
   };
   
-  const displayScore = bestAttempt?.iqScore ?? latestAttempt?.iqScore;
-  const displayValidity = bestAttempt?.validityReport?.status ?? latestAttempt?.validityReport?.status;
+  const displayBestScore = bestAttempt?.iqScore ?? 'N/A';
+  const displayLastScore = latestAttempt?.iqScore ?? 'N/A';
+  const displayValidity = latestAttempt?.validityReport?.status ?? 'N/A';
 
 
   return (
@@ -83,7 +88,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="text-3xl font-bold">Your Cognitive Snapshot</CardTitle>
               <CardDescription>
-                {latestAttempt ? 'Here are your latest results. Keep challenging yourself!' : 'Ready to discover your cognitive potential? Start your first test now.'}
+                {history.length > 0 ? 'Here are your latest results. Keep challenging yourself!' : 'Ready to discover your cognitive potential? Start your first test now.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -91,36 +96,36 @@ export default function DashboardPage() {
                   <StatCard 
                     icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
                     title="Best Valid IQ"
-                    value={bestAttempt ? `${bestAttempt.iqScore}` : 'N/A'}
-                    description="Your highest valid, non-practice score."
+                    value={`${displayBestScore}`}
+                    description="Your highest valid score (ranked or practice)."
                   />
                   <StatCard 
                     icon={<History className="h-4 w-4 text-muted-foreground" />}
                     title="Last IQ Score"
-                    value={latestAttempt ? `${latestAttempt.iqScore}` : 'N/A'}
+                    value={`${displayLastScore}`}
                     description={latestAttempt?.isPractice ? 'From a practice attempt.' : 'From your most recent attempt.'}
                   />
                   <StatCard 
                     icon={<Shield className="h-4 w-4 text-muted-foreground" />}
                     title="Last Test Validity"
-                    value={displayValidity || 'N/A'}
+                    value={displayValidity}
                     description="Confidence in your last result."
                   />
                   <StatCard 
                     icon={<Brain className="h-4 w-4 text-muted-foreground" />}
                     title="Tests Taken"
-                    value={`${getTestHistory().length}`}
+                    value={`${history.length}`}
                     description="Total number of attempts."
                   />
                 </div>
             </CardContent>
-            <CardFooter className="flex-col sm:flex-row gap-2 items-start">
+            <CardFooter className="flex-col sm:flex-row gap-2 items-start pt-6">
               <Button onClick={handleStartTest} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
-                {getTestHistory().length > 0 ? 'Start Practice Test' : 'Start First Test'}
+                {history.length === 0 ? 'Start First Test' : (canTakeRanked ? 'Start Ranked Test' : 'Start Practice Test')}
               </Button>
-              {!canRetake && latestAttempt && !latestAttempt.isPractice && (
+              {!canTakeRanked && (
                 <p className="text-sm text-muted-foreground pt-2">
-                  You can take a new ranked test in {RETAKE_COOLDOWN_DAYS - daysSinceLastAttempt} day(s). Practice tests are always available.
+                  You can take a new ranked test in {RETAKE_COOLDOWN_DAYS - daysSinceLastRankedAttempt} day(s). Practice tests are always available.
                 </p>
               )}
             </CardFooter>

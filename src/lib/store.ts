@@ -9,7 +9,8 @@ const TEST_HISTORY_KEY = 'cogniassess_test_history';
 const encode = (data: any): string => {
   if (typeof window === 'undefined') return '';
   try {
-    return window.btoa(encodeURIComponent(JSON.stringify(data)));
+    // btoa can fail on non-latin characters. encodeURIComponent handles this.
+    return window.btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   } catch (e) {
     console.error("Failed to encode data for localStorage", e);
     return '';
@@ -19,13 +20,26 @@ const encode = (data: any): string => {
 const decode = <T>(encodedData: string | null): T | null => {
   if (typeof window === 'undefined' || !encodedData) return null;
   try {
-    return JSON.parse(decodeURIComponent(window.atob(encodedData))) as T;
+    // atob can fail on non-latin characters. decodeURIComponent handles this.
+    return JSON.parse(decodeURIComponent(escape(window.atob(encodedData)))) as T;
   } catch (e) {
     console.error("Failed to decode data from localStorage", e);
-    // If decoding fails, try to clear the corrupted item
-    // This is brittle, but for this app might be better than crashing
-    if (encodedData.includes('user')) localStorage.removeItem(USER_PROFILE_KEY);
-    if (encodedData.includes('history')) localStorage.removeItem(TEST_HISTORY_KEY);
+    
+    // Clear corrupted data if possible
+    try {
+        if (encodedData) {
+            const partiallyDecoded = window.atob(encodedData);
+            if (partiallyDecoded.includes('email')) { // Heuristic for user profile
+                 localStorage.removeItem(USER_PROFILE_KEY);
+            }
+            if (partiallyDecoded.includes('testId') || partiallyDecoded.includes('iqScore')) { // Heuristic for test history
+                 localStorage.removeItem(TEST_HISTORY_KEY);
+            }
+        }
+    } catch (clearError) {
+        console.error("Failed to clear corrupted localStorage item", clearError);
+    }
+
     return null;
   }
 };
@@ -52,6 +66,7 @@ export const getTestHistory = (): TestAttempt[] => {
 };
 
 export const addTestAttempt = (attempt: TestAttempt): void => {
+  if (typeof window === 'undefined') return;
   const history = getTestHistory();
   const newHistory = [attempt, ...history];
   localStorage.setItem(TEST_HISTORY_KEY, encode(newHistory));
@@ -69,26 +84,28 @@ export const getLatestTestAttempt = (): TestAttempt | null => {
 
 export const getBestValidTestAttempt = (): TestAttempt | null => {
   const history = getTestHistory();
-  const validAttempts = history.filter(
+  
+  const validRankedAttempts = history.filter(
     (attempt) => attempt.validityReport.status === 'High' && !attempt.isPractice
   );
 
-  if (validAttempts.length > 0) {
-      return validAttempts.reduce((best, current) =>
+  if (validRankedAttempts.length > 0) {
+      return validRankedAttempts.reduce((best, current) =>
         current.iqScore > best.iqScore ? current : best
       );
   }
-  
-  // Fallback to best practice attempt if no valid non-practice attempts exist
-  const practiceAttempts = history.filter(
-    (attempt) => attempt.validityReport.status === 'High'
-  );
 
-  if (practiceAttempts.length > 0) {
-      return practiceAttempts.reduce((best, current) =>
+  // If no valid ranked attempts, find the best valid practice attempt.
+  const validPracticeAttempts = history.filter(
+    (attempt) => attempt.validityReport.status === 'High' && attempt.isPractice
+  );
+  
+  if (validPracticeAttempts.length > 0) {
+      return validPracticeAttempts.reduce((best, current) =>
         current.iqScore > best.iqScore ? current : best
       );
   }
   
+  // If no high-validity attempts at all, return null.
   return null;
 };
