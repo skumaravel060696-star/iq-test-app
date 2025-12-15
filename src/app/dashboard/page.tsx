@@ -46,7 +46,8 @@ export default function DashboardPage() {
       setLatestAttempt(getLatestTestAttempt());
       setBestAttempt(getBestValidTestAttempt());
     }
-  }, [router, setLatestAttempt, setBestAttempt]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   if (!isClient || !user) {
     return (
