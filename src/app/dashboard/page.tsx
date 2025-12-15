@@ -1,15 +1,16 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { differenceInDays } from 'date-fns';
-import { BrainCircuit, HelpCircle, LogOut, MoreVertical, User as UserIcon, Shield, Trophy, History } from 'lucide-react';
+import { BrainCircuit, HelpCircle, LogOut, MoreVertical, User as UserIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { UserProfile, TestAttempt } from '@/lib/types';
-import { getLatestTestAttempt, getUserProfile, getTestHistory, clearUserData } from '@/lib/store';
+import { getUserProfile, getTestHistory, clearUserData } from '@/lib/store';
 import { Logo } from '@/components/Logo';
 
 const RETAKE_COOLDOWN_DAYS = 7;

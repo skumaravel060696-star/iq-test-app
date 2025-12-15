@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Brain, BrainCircuit, History, LogOut, MoreVertical, Shield, Trophy, User as UserIcon, ArrowLeft } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { TestAttempt, UserProfile } from '@/lib/types';
 import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory, clearUserData } from '@/lib/store';
@@ -83,9 +84,9 @@ export default function OverviewPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => router.push('/overview')}>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
                     <BrainCircuit className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
+                    <span>Test Lobby</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     <UserIcon className="mr-2 h-4 w-4" />
@@ -107,7 +108,7 @@ export default function OverviewPage() {
             <CardHeader>
               <CardTitle className="text-3xl font-bold">Your Cognitive Snapshot</CardTitle>
               <CardDescription>
-                {history.length > 0 ? 'Here are your latest results. Keep challenging yourself!' : 'You haven\\'t taken any tests yet. Your results will appear here.'}
+                {history.length > 0 ? 'Here are your latest results. Keep challenging yourself!' : "You haven't taken any tests yet. Your results will appear here."}
               </CardDescription>
             </CardHeader>
             <CardContent>
