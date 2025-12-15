@@ -47,7 +47,7 @@ export interface AnswerRecord {
 export interface TestAttempt {
   id: string;
   userId: string;
-  questions: GeneratedQuestion[];
+  questions: Question[];
   answers: AnswerRecord[];
   validityReport: ValidityReport;
   abilityScore: number;

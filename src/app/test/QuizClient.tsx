@@ -15,7 +15,7 @@ import { addTestAttempt, getUserProfile } from '@/lib/store';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Logo } from '@/components/Logo';
 import {generateDynamicTest} from '@/ai/flows/generate-dynamic-test';
 
@@ -125,6 +125,7 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
   const [test, setTest] = useState<GeneratedQuestion[] | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
+  const [testStartTime, setTestStartTime] = useState(0);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [isFinishing, setIsFinishing] = useState(false);
   const { visibilityChanges, isVisible } = usePageVisibility();
@@ -149,6 +150,7 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
             numberOfQuestions: NUMBER_OF_QUESTIONS
           });
           setTest(questions);
+          setTestStartTime(Date.now());
           setQuestionStartTime(Date.now());
         } catch (error) {
           console.error("Failed to generate test:", error);
@@ -175,14 +177,14 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
       validityReport,
       abilityScore,
       iqScore,
-      startedAt: new Date(questionStartTime).toISOString(), // This is an approximation
+      startedAt: new Date(testStartTime).toISOString(),
       completedAt: new Date().toISOString(),
     };
 
     addTestAttempt(newAttempt);
     router.replace(`/results/${newAttempt.id}`);
 
-  }, [user, test, questionStartTime, visibilityChanges, router, isFinishing]);
+  }, [user, test, testStartTime, visibilityChanges, router, isFinishing]);
 
   const handleAnswer = useCallback((answer: string | null) => {
     if (!test) return;
@@ -246,10 +248,8 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
+                  <AlertDialogCancel>Continue</AlertDialogCancel>
                   <AlertDialogAction onClick={() => router.replace('/dashboard')}>Exit Test</AlertDialogAction>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost">Continue</Button>
-                  </AlertDialogTrigger>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

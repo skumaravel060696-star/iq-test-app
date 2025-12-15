@@ -1,15 +1,15 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for generating a dynamic test tailored to a user's age and difficulty preferences.
+ * @fileOverview This file defines a local function for generating a dynamic test tailored to a user's age and difficulty preferences.
  *
  * - generateDynamicTest - Generates a dynamic test based on user age and difficulty mix.
  * - GenerateDynamicTestInput - The input type for the generateDynamicTest function.
  * - GeneratedDynamicTestOutput - The return type for the generateDynamicTest function.
  */
+import { z } from 'zod';
+import type { Question } from '@/lib/types';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
 
 // Define the structure for a question
 const QuestionSchema = z.object({
@@ -54,17 +54,6 @@ export type GeneratedDynamicTestOutput = z.infer<typeof GeneratedDynamicTestOutp
 
 // Exported function to generate the dynamic test
 export async function generateDynamicTest(input: GenerateDynamicTestInput): Promise<GeneratedDynamicTestOutput> {
-  return generateDynamicTestFlow(input);
-}
-
-// Define the Genkit flow
-const generateDynamicTestFlow = ai.defineFlow(
-  {
-    name: 'generateDynamicTestFlow',
-    inputSchema: GenerateDynamicTestInputSchema,
-    outputSchema: GeneratedDynamicTestOutputSchema,
-  },
-  async input => {
     // Destructure input parameters
     const {ageBand, difficultyMix, questionBank, numberOfQuestions} = input;
 
@@ -76,7 +65,9 @@ const generateDynamicTestFlow = ai.defineFlow(
     // Calculate the number of questions for each difficulty level
     const numEasy = Math.round(numberOfQuestions * difficultyMix.easy);
     const numMedium = Math.round(numberOfQuestions * difficultyMix.medium);
-    const numHard = Math.round(numberOfQuestions * difficultyMix.hard);
+    let numHard = numberOfQuestions - numEasy - numMedium;
+    if (numHard < 0) numHard = 0;
+
 
     // Function to select a random subset of questions
     function selectRandomQuestions<T>(questions: T[], count: number): T[] {
@@ -90,7 +81,17 @@ const generateDynamicTestFlow = ai.defineFlow(
     const selectedHardQuestions = selectRandomQuestions(hardQuestions, numHard);
 
     // Combine selected questions
-    const selectedQuestions = [...selectedEasyQuestions, ...selectedMediumQuestions, ...selectedHardQuestions];
+    let selectedQuestions = [...selectedEasyQuestions, ...selectedMediumQuestions, ...selectedHardQuestions];
+    
+    // Ensure the total number of questions is correct
+    if (selectedQuestions.length > numberOfQuestions) {
+        selectedQuestions = selectedQuestions.slice(0, numberOfQuestions);
+    } else if (selectedQuestions.length < numberOfQuestions) {
+        const allQuestions = [...easyQuestions, ...mediumQuestions, ...hardQuestions];
+        const additionalQuestions = selectRandomQuestions(allQuestions.filter(q => !selectedQuestions.some(sq => sq.qid === q.qid)), numberOfQuestions - selectedQuestions.length);
+        selectedQuestions.push(...additionalQuestions);
+    }
+
 
     // Shuffle the selected questions to randomize the order
     const shuffledQuestions = [...selectedQuestions].sort(() => 0.5 - Math.random());
@@ -104,5 +105,4 @@ const generateDynamicTestFlow = ai.defineFlow(
     return {
       questions: generatedQuestions,
     };
-  }
-);
+}
