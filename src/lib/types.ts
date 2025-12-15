@@ -7,9 +7,11 @@ export interface UserProfile {
   createdAt: string;
 }
 
+export type QuestionDomain = 'logical' | 'pattern' | 'spatial' | 'numerical' | 'memory';
+
 export interface Question {
   qid: string;
-  domain: 'logical' | 'pattern' | 'spatial' | 'numerical' | 'memory';
+  domain: QuestionDomain;
   difficulty: number; // 0-1
   discrimination: number; // 0-1
   guess_factor: number; // 0-1
@@ -54,4 +56,5 @@ export interface TestAttempt {
   iqScore: number;
   startedAt: string;
   completedAt: string;
+  isPractice: boolean;
 }

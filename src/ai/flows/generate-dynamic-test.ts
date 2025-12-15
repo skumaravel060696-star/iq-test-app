@@ -1,14 +1,14 @@
 'use server';
 
 /**
- * @fileOverview This file defines a local function for generating a dynamic test tailored to a user's age and difficulty preferences.
+ * @fileOverview This file defines a local function for generating a dynamic test tailored to a user's age and domain preferences.
  *
- * - generateDynamicTest - Generates a dynamic test based on user age and difficulty mix.
+ * - generateDynamicTest - Generates a dynamic test based on user age and domain mix.
  * - GenerateDynamicTestInput - The input type for the generateDynamicTest function.
  * - GeneratedDynamicTestOutput - The return type for the generateDynamicTest function.
  */
 import { z } from 'zod';
-import type { Question } from '@/lib/types';
+import type { Question, QuestionDomain } from '@/lib/types';
 
 
 // Define the structure for a question
@@ -27,13 +27,14 @@ const QuestionSchema = z.object({
 // Define the input schema for the dynamic test generation
 const GenerateDynamicTestInputSchema = z.object({
   ageBand: z.string().describe('The age band of the user (e.g., 18-25)'),
-  difficultyMix: z
-    .object({
-      easy: z.number().describe('Percentage of easy questions (0-1)'),
-      medium: z.number().describe('Percentage of medium questions (0-1)'),
-      hard: z.number().describe('Percentage of hard questions (0-1)'),
-    })
-    .describe('The desired difficulty mix for the test'),
+  domainMix: z.record(z.nativeEnum(Object.values({
+    logical: 'logical',
+    pattern: 'pattern',
+    spatial: 'spatial',
+    numerical: 'numerical',
+    memory: 'memory'
+  }) as [string, ...string[]]), z.number())
+  .describe('The desired domain mix for the test'),
   questionBank: z.array(QuestionSchema).describe('The question bank to select questions from'),
   numberOfQuestions: z.number().describe('The total number of questions to generate'),
 });
@@ -55,41 +56,34 @@ export type GeneratedDynamicTestOutput = z.infer<typeof GeneratedDynamicTestOutp
 // Exported function to generate the dynamic test
 export async function generateDynamicTest(input: GenerateDynamicTestInput): Promise<GeneratedDynamicTestOutput> {
     // Destructure input parameters
-    const {ageBand, difficultyMix, questionBank, numberOfQuestions} = input;
+    const {ageBand, domainMix, questionBank, numberOfQuestions} = input;
 
-    // Filter questions based on the difficulty mix
-    const easyQuestions = questionBank.filter(q => q.difficulty <= 0.3);
-    const mediumQuestions = questionBank.filter(q => q.difficulty > 0.3 && q.difficulty <= 0.7);
-    const hardQuestions = questionBank.filter(q => q.difficulty > 0.7);
-
-    // Calculate the number of questions for each difficulty level
-    const numEasy = Math.round(numberOfQuestions * difficultyMix.easy);
-    const numMedium = Math.round(numberOfQuestions * difficultyMix.medium);
-    let numHard = numberOfQuestions - numEasy - numMedium;
-    if (numHard < 0) numHard = 0;
-
+    let selectedQuestions: Question[] = [];
 
     // Function to select a random subset of questions
     function selectRandomQuestions<T>(questions: T[], count: number): T[] {
       const shuffled = [...questions].sort(() => 0.5 - Math.random()); // Shuffle the questions
       return shuffled.slice(0, count); // Take the first 'count' questions
     }
-
-    // Select questions for each difficulty level
-    const selectedEasyQuestions = selectRandomQuestions(easyQuestions, numEasy);
-    const selectedMediumQuestions = selectRandomQuestions(mediumQuestions, numMedium);
-    const selectedHardQuestions = selectRandomQuestions(hardQuestions, numHard);
-
-    // Combine selected questions
-    let selectedQuestions = [...selectedEasyQuestions, ...selectedMediumQuestions, ...selectedHardQuestions];
     
-    // Ensure the total number of questions is correct
-    if (selectedQuestions.length > numberOfQuestions) {
+    const domains = Object.keys(domainMix) as QuestionDomain[];
+    let totalSelected = 0;
+    
+    // Distribute questions based on domain mix
+    for(const domain of domains) {
+        const count = Math.round(numberOfQuestions * domainMix[domain]);
+        const domainQuestions = questionBank.filter(q => q.domain === domain);
+        selectedQuestions.push(...selectRandomQuestions(domainQuestions, count));
+        totalSelected += count;
+    }
+
+    // Adjust if rounding caused a mismatch in total questions
+    if (totalSelected < numberOfQuestions) {
+        const remaining = numberOfQuestions - totalSelected;
+        const allAvailableQuestions = questionBank.filter(q => !selectedQuestions.some(sq => sq.qid === q.qid));
+        selectedQuestions.push(...selectRandomQuestions(allAvailableQuestions, remaining));
+    } else if (totalSelected > numberOfQuestions) {
         selectedQuestions = selectedQuestions.slice(0, numberOfQuestions);
-    } else if (selectedQuestions.length < numberOfQuestions) {
-        const allQuestions = [...easyQuestions, ...mediumQuestions, ...hardQuestions];
-        const additionalQuestions = selectRandomQuestions(allQuestions.filter(q => !selectedQuestions.some(sq => sq.qid === q.qid)), numberOfQuestions - selectedQuestions.length);
-        selectedQuestions.push(...additionalQuestions);
     }
 
 

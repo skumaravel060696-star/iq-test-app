@@ -60,7 +60,7 @@ export default function ResultsPage() {
     );
   }
 
-  const { iqScore, validityReport } = attempt;
+  const { iqScore, validityReport, isPractice } = attempt;
   const validityInfo = ValidityDisplay[validityReport.status];
 
   return (
@@ -78,8 +78,11 @@ export default function ResultsPage() {
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
-            className="text-center p-8 bg-primary/5 rounded-lg border border-primary/20"
+            className="text-center p-8 bg-primary/5 rounded-lg border border-primary/20 relative"
           >
+            {isPractice && (
+                <Badge variant="outline" className="absolute top-2 right-2">Practice Attempt</Badge>
+            )}
             <p className="text-sm font-medium text-primary">Your Estimated IQ Score</p>
             <p className="text-7xl font-bold text-primary">{iqScore}</p>
           </motion.div>

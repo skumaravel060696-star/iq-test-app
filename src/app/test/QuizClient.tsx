@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import type { AnswerRecord, GeneratedQuestion, Question, TestAttempt, UserProfile } from '@/lib/types';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { calculateAbilityScore, normalizeIqScore } from '@/lib/engine/scoring';
 import { calculateValidity } from '@/lib/engine/validity';
-import { addTestAttempt, getUserProfile } from '@/lib/store';
+import { addTestAttempt, getTestHistory, getUserProfile } from '@/lib/store';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,9 +19,24 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Logo } from '@/components/Logo';
 import {generateDynamicTest} from '@/ai/flows/generate-dynamic-test';
 
-const NUMBER_OF_QUESTIONS = 10;
-const DIFFICULTY_MIX = { easy: 0.3, medium: 0.5, hard: 0.2 };
+const NUMBER_OF_QUESTIONS = 20;
 
+const DOMAIN_MIX = {
+  logical: 0.3,
+  pattern: 0.25,
+  spatial: 0.20,
+  numerical: 0.15,
+  memory: 0.10,
+};
+
+const shuffle = <T,>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
 
 // --- Components ---
 
@@ -62,6 +77,7 @@ function QuestionCard({
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleSelect = (option: string) => {
+    if (selected) return;
     setSelected(option);
     setTimeout(() => onAnswer(option), 300);
   };
@@ -73,20 +89,6 @@ function QuestionCard({
     }
   }, { enableOnFormTags: false, preventDefault: true });
 
-  const getButtonVariant = (option: string) => {
-    if (!selected) return "outline";
-    if (selected === option) {
-      return option === question.answer ? "default" : "destructive";
-    }
-    return "outline";
-  };
-  
-  const getButtonIcon = (option: string) => {
-    if (selected && selected === option) {
-       return option === question.answer ? <Check/> : <X/>;
-    }
-    return null;
-  }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -101,14 +103,13 @@ function QuestionCard({
               key={option}
               onClick={() => handleSelect(option)}
               disabled={!!selected}
-              variant={getButtonVariant(option)}
-              className="h-auto min-h-12 py-3 justify-between text-left whitespace-normal text-base"
+              variant={selected === option ? "default" : "outline"}
+              className="h-auto min-h-12 py-3 justify-start text-left whitespace-normal text-base"
             >
               <div className="flex items-center gap-4">
                 <span className="text-sm font-bold border rounded-md h-6 w-6 flex items-center justify-center">{index+1}</span>
                 <span>{option}</span>
               </div>
-              {getButtonIcon(option)}
             </Button>
           ))}
         </div>
@@ -143,9 +144,22 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
     if (user && !test) {
       const getTest = async () => {
         try {
+          const isRetake = getTestHistory().length > 0;
+          let currentDomainMix = { ...DOMAIN_MIX };
+
+          if (isRetake) {
+              const domains = shuffle(Object.keys(currentDomainMix));
+              const percentages = shuffle(Object.values(currentDomainMix));
+              currentDomainMix = domains.reduce((acc, domain, index) => {
+                acc[domain as keyof typeof DOMAIN_MIX] = percentages[index];
+                return acc;
+              }, {} as typeof DOMAIN_MIX);
+          }
+
+
           const { questions } = await generateDynamicTest({
             ageBand: user.age.toString(), // Simplified for example
-            difficultyMix: DIFFICULTY_MIX,
+            domainMix: currentDomainMix,
             questionBank: questionBank,
             numberOfQuestions: NUMBER_OF_QUESTIONS
           });
@@ -179,6 +193,7 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
       iqScore,
       startedAt: new Date(testStartTime).toISOString(),
       completedAt: new Date().toISOString(),
+      isPractice: getTestHistory().length > 0
     };
 
     addTestAttempt(newAttempt);

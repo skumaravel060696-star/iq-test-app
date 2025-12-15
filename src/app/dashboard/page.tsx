@@ -32,8 +32,8 @@ function StatCard({ icon, title, value, description }: { icon: React.ReactNode, 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [latestAttempt, setLatestAttempt] = useLocalStorage<TestAttempt | null>('cogniassess_latest_attempt', null);
-  const [bestAttempt, setBestAttempt] = useLocalStorage<TestAttempt | null>('cogniassess_best_attempt', null);
+  const [latestAttempt, setLatestAttempt] = useState<TestAttempt | null>(null);
+  const [bestAttempt, setBestAttempt] = useState<TestAttempt | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -46,7 +46,6 @@ export default function DashboardPage() {
       setLatestAttempt(getLatestTestAttempt());
       setBestAttempt(getBestValidTestAttempt());
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   if (!isClient || !user) {
@@ -94,13 +93,13 @@ export default function DashboardPage() {
                     icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
                     title="Best Valid IQ"
                     value={bestAttempt ? `${bestAttempt.iqScore}` : 'N/A'}
-                    description="Your highest score from a valid test."
+                    description="Your highest valid, non-practice score."
                   />
                   <StatCard 
                     icon={<History className="h-4 w-4 text-muted-foreground" />}
                     title="Last IQ Score"
                     value={latestAttempt ? `${latestAttempt.iqScore}` : 'N/A'}
-                    description="From your most recent attempt."
+                    description={latestAttempt?.isPractice ? 'From a practice attempt.' : 'From your most recent attempt.'}
                   />
                   <StatCard 
                     icon={<Shield className="h-4 w-4 text-muted-foreground" />}
@@ -116,13 +115,13 @@ export default function DashboardPage() {
                   />
                 </div>
             </CardContent>
-            <CardFooter className="flex-col sm:flex-row gap-2">
+            <CardFooter className="flex-col sm:flex-row gap-2 items-start">
               <Button onClick={handleStartTest} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
-                {latestAttempt ? 'Retake Test' : 'Start First Test'}
+                {getTestHistory().length > 0 ? 'Start Practice Test' : 'Start First Test'}
               </Button>
-              {!canRetake && (
-                <p className="text-sm text-muted-foreground">
-                  You can retake the test in {RETAKE_COOLDOWN_DAYS - daysSinceLastAttempt} day(s).
+              {!canRetake && latestAttempt && (
+                <p className="text-sm text-muted-foreground pt-2">
+                  You can take a new ranked test in {RETAKE_COOLDOWN_DAYS - daysSinceLastAttempt} day(s). Practice tests are always available.
                 </p>
               )}
             </CardFooter>
@@ -135,6 +134,7 @@ export default function DashboardPage() {
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                   <p><strong className="text-foreground">IQ Score:</strong> This is a normalized score based on your performance relative to your age group. The average IQ is 100.</p>
                   <p><strong className="text-foreground">Test Validity:</strong> This reflects our confidence that the score accurately represents your ability. Factors like distractions or unusually fast answers can lower validity.</p>
+                   <p><strong className="text-foreground">Practice Attempts:</strong> Subsequent tests are considered practice and will not overwrite your best valid score from a non-practice attempt.</p>
                   <p><strong className="text-foreground">Disclaimer:</strong> This is an informational tool, not a clinical diagnosis. For a formal assessment, please consult a qualified psychologist.</p>
               </CardContent>
           </Card>

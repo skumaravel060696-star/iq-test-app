@@ -8,15 +8,24 @@ const TEST_HISTORY_KEY = 'cogniassess_test_history';
 // Secure client-side encryption without a backend for key management is not feasible.
 const encode = (data: any): string => {
   if (typeof window === 'undefined') return '';
-  return window.btoa(JSON.stringify(data));
+  try {
+    return window.btoa(encodeURIComponent(JSON.stringify(data)));
+  } catch (e) {
+    console.error("Failed to encode data for localStorage", e);
+    return '';
+  }
 };
 
 const decode = <T>(encodedData: string | null): T | null => {
   if (typeof window === 'undefined' || !encodedData) return null;
   try {
-    return JSON.parse(window.atob(encodedData)) as T;
+    return JSON.parse(decodeURIComponent(window.atob(encodedData))) as T;
   } catch (e) {
     console.error("Failed to decode data from localStorage", e);
+    // If decoding fails, try to clear the corrupted item
+    // This is brittle, but for this app might be better than crashing
+    if (encodedData.includes('user')) localStorage.removeItem(USER_PROFILE_KEY);
+    if (encodedData.includes('history')) localStorage.removeItem(TEST_HISTORY_KEY);
     return null;
   }
 };
@@ -44,6 +53,11 @@ export const getTestHistory = (): TestAttempt[] => {
 
 export const addTestAttempt = (attempt: TestAttempt): void => {
   const history = getTestHistory();
+  // Prevent overwriting best score with practice attempt
+  const bestAttempt = getBestValidTestAttempt();
+  if (attempt.isPractice && bestAttempt && attempt.iqScore < bestAttempt.iqScore) {
+     // We could store it but decide not to show it as the "latest" in some contexts
+  }
   const newHistory = [attempt, ...history];
   localStorage.setItem(TEST_HISTORY_KEY, encode(newHistory));
 };
@@ -61,11 +75,17 @@ export const getLatestTestAttempt = (): TestAttempt | null => {
 export const getBestValidTestAttempt = (): TestAttempt | null => {
   const history = getTestHistory();
   const validAttempts = history.filter(
-    (attempt) => attempt.validityReport.status === 'High'
+    (attempt) => attempt.validityReport.status === 'High' && !attempt.isPractice
   );
 
   if (validAttempts.length === 0) {
-    return null;
+    const validPracticeAttempts = history.filter(
+      (attempt) => attempt.validityReport.status === 'High' && attempt.isPractice
+    );
+     if (validPracticeAttempts.length === 0) return null;
+     return validPracticeAttempts.reduce((best, current) =>
+      current.iqScore > best.iqScore ? current : best
+    );
   }
 
   return validAttempts.reduce((best, current) =>
