@@ -1,0 +1,54 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+
+// This is a simple obfuscation, not true encryption.
+// In a real-world scenario without a backend, secure key management is not possible.
+const encode = (str: string) => typeof window !== 'undefined' ? window.btoa(encodeURIComponent(str)) : str;
+const decode = (str: string) => typeof window !== 'undefined' ? decodeURIComponent(window.atob(str)) : str;
+
+
+export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === 'undefined') {
+      return initialValue;
+    }
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(decode(item)) : initialValue;
+    } catch (error) {
+      console.error(error);
+      return initialValue;
+    }
+  });
+
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, encode(JSON.stringify(valueToStore)));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === key && e.newValue) {
+        try {
+          setStoredValue(JSON.parse(decode(e.newValue)));
+        } catch (error) {
+            console.error(error);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key]);
+
+  return [storedValue, setValue];
+}
