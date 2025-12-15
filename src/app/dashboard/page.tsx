@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { differenceInDays } from 'date-fns';
-import { Brain, HelpCircle, History, Shield, Trophy } from 'lucide-react';
+import { Brain, BrainCircuit, HelpCircle, History, Shield, Trophy } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { TestAttempt, UserProfile } from '@/lib/types';
-import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile } from '@/lib/store';
+import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory } from '@/lib/store';
 import { Logo } from '@/components/Logo';
 
 const RETAKE_COOLDOWN_DAYS = 7;
