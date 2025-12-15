@@ -8,7 +8,6 @@ import { ArrowLeft, Check, X } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import type { AnswerRecord, GeneratedQuestion, Question, TestAttempt, UserProfile } from '@/lib/types';
-import { generateDynamicTest } from '@/ai/flows/generate-dynamic-test';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { calculateAbilityScore, normalizeIqScore } from '@/lib/engine/scoring';
 import { calculateValidity } from '@/lib/engine/validity';
@@ -21,6 +20,39 @@ import { Logo } from '@/components/Logo';
 
 const NUMBER_OF_QUESTIONS = 10;
 const DIFFICULTY_MIX = { easy: 0.3, medium: 0.5, hard: 0.2 };
+
+// --- Local Test Generation ---
+function generateLocalDynamicTest(
+  questionBank: Question[],
+  difficultyMix: { easy: number; medium: number; hard: number },
+  numberOfQuestions: number
+): GeneratedQuestion[] {
+  const easyQuestions = questionBank.filter(q => q.difficulty <= 0.3);
+  const mediumQuestions = questionBank.filter(q => q.difficulty > 0.3 && q.difficulty <= 0.7);
+  const hardQuestions = questionBank.filter(q => q.difficulty > 0.7);
+
+  const numEasy = Math.round(numberOfQuestions * difficultyMix.easy);
+  const numMedium = Math.round(numberOfQuestions * difficultyMix.medium);
+  const numHard = Math.round(numberOfQuestions * difficultyMix.hard);
+
+  function selectRandomQuestions<T>(questions: T[], count: number): T[] {
+    const shuffled = [...questions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+
+  const selectedEasyQuestions = selectRandomQuestions(easyQuestions, numEasy);
+  const selectedMediumQuestions = selectRandomQuestions(mediumQuestions, numMedium);
+  const selectedHardQuestions = selectRandomQuestions(hardQuestions, numHard);
+
+  const selectedQuestions = [...selectedEasyQuestions, ...selectedMediumQuestions, ...selectedHardQuestions];
+  const shuffledQuestions = [...selectedQuestions].sort(() => 0.5 - Math.random());
+
+  return shuffledQuestions.map(question => ({
+    ...question,
+    shuffledOptions: [...question.options].sort(() => 0.5 - Math.random()),
+  }));
+}
+
 
 // --- Components ---
 
@@ -139,23 +171,18 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
 
   useEffect(() => {
     if (user && !test) {
-      const getTest = async () => {
-        try {
-          const { questions } = await generateDynamicTest({
-            ageBand: `${user.age}`,
-            difficultyMix: DIFFICULTY_MIX,
-            questionBank: questionBank,
-            numberOfQuestions: NUMBER_OF_QUESTIONS,
-          });
-          setTest(questions);
-          setQuestionStartTime(Date.now());
-        } catch (error) {
-          console.error("Failed to generate test:", error);
-          // Handle error, maybe show a toast and redirect
-          router.replace('/dashboard');
-        }
-      };
-      getTest();
+      try {
+        const questions = generateLocalDynamicTest(
+          questionBank,
+          DIFFICULTY_MIX,
+          NUMBER_OF_QUESTIONS
+        );
+        setTest(questions);
+        setQuestionStartTime(Date.now());
+      } catch (error) {
+        console.error("Failed to generate test:", error);
+        router.replace('/dashboard');
+      }
     }
   }, [user, test, questionBank, router]);
   
