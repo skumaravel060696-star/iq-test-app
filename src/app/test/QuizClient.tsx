@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -18,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Logo } from '@/components/Logo';
-import {generateDynamicTest} from '@/ai/flows/generate-dynamic-test';
+import { generateDynamicTest } from '@/ai/flows/generate-dynamic-test';
 
 const NUMBER_OF_QUESTIONS = 20;
 const RETAKE_COOLDOWN_DAYS = 7;
@@ -107,7 +108,7 @@ function QuestionCard({
               disabled={!!selected}
               variant={selected === option ? "default" : "outline"}
               className={`h-auto min-h-12 py-3 justify-start text-left whitespace-normal text-base transition-colors duration-300 ${
-                selected && (selected === option ? 'bg-primary text-primary-foreground' : 'bg-muted/50')
+                selected ? (selected === option ? 'bg-primary text-primary-foreground' : 'bg-muted/50') : 'hover:bg-accent'
               }`}
             >
               <div className="flex items-center gap-4">
@@ -172,10 +173,18 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
               }, {} as typeof DOMAIN_MIX);
           }
 
+          const seenQuestionIds = new Set(history.flatMap(attempt => attempt.questions.map(q => q.qid)));
+          let availableQuestions = questionBank.filter(q => !seenQuestionIds.has(q.qid));
+          
+          // If all questions have been seen, reset and allow repeats
+          if (availableQuestions.length < NUMBER_OF_QUESTIONS) {
+              availableQuestions = questionBank;
+          }
+
           const { questions } = await generateDynamicTest({
             ageBand: user.age.toString(), // Simplified for example
             domainMix: currentDomainMix,
-            questionBank: questionBank,
+            questionBank: availableQuestions,
             numberOfQuestions: NUMBER_OF_QUESTIONS
           });
           setTest(questions);

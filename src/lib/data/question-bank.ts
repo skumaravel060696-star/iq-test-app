@@ -1,3 +1,4 @@
+
 import type { Question } from '@/lib/types';
 
 export const questionBank: Question[] = [
@@ -35,6 +36,40 @@ export const questionBank: Question[] = [
     "answer": "EDRIRL",
     "time_limit_sec": 60
   },
+  {
+    "qid": "LOG_M_004",
+    "domain": "logical",
+    "difficulty": 0.6,
+    "discrimination": 0.72,
+    "guess_factor": 0.25,
+    "question": "All roses are flowers. Some flowers fade quickly. Therefore...",
+    "options": ["All roses fade quickly", "Some roses fade quickly", "No roses fade quickly", "We cannot be certain if any roses fade quickly"],
+    "answer": "We cannot be certain if any roses fade quickly",
+    "time_limit_sec": 50
+  },
+   {
+    "qid": "LOG_E_005",
+    "domain": "logical",
+    "difficulty": 0.3,
+    "discrimination": 0.65,
+    "guess_factor": 0.25,
+    "question": "A is B's sister. C is B's mother. D is C's father. E is D's mother. Then, how is A related to D?",
+    "options": ["Grandfather", "Grandmother", "Daughter", "Granddaughter"],
+    "answer": "Granddaughter",
+    "time_limit_sec": 40
+  },
+  {
+    "qid": "LOG_H_006",
+    "domain": "logical",
+    "difficulty": 0.8,
+    "discrimination": 0.8,
+    "guess_factor": 0.25,
+    "question": "Statement: All artists are whimsical. Some whimsical people are rich. Conclusion: Some artists are rich.",
+    "options": ["True", "False", "Cannot be determined", "Both are unrelated"],
+    "answer": "Cannot be determined",
+    "time_limit_sec": 55
+  },
+
   // Pattern Recognition
   {
     "qid": "PAT_E_001",
@@ -69,6 +104,40 @@ export const questionBank: Question[] = [
     "answer": "85",
     "time_limit_sec": 75
   },
+   {
+    "qid": "PAT_M_004",
+    "domain": "pattern",
+    "difficulty": 0.5,
+    "discrimination": 0.68,
+    "guess_factor": 0.25,
+    "question": "Which of the following does not belong: Violin, Flute, Cello, Guitar",
+    "options": ["Violin", "Flute", "Cello", "Guitar"],
+    "answer": "Flute",
+    "time_limit_sec": 35
+  },
+   {
+    "qid": "PAT_E_005",
+    "domain": "pattern",
+    "difficulty": 0.4,
+    "discrimination": 0.6,
+    "guess_factor": 0.25,
+    "question": "Look at this series: F2, __, D8, C16, B32, ...",
+    "options": ["A16", "G4", "E4", "E3"],
+    "answer": "E4",
+    "time_limit_sec": 40
+  },
+  {
+    "qid": "PAT_H_006",
+    "domain": "pattern",
+    "difficulty": 0.85,
+    "discrimination": 0.82,
+    "guess_factor": 0.25,
+    "question": "What is the next number in the sequence: 1, 1, 2, 3, 5, 8, ...?",
+    "options": ["11", "13", "15", "21"],
+    "answer": "13",
+    "time_limit_sec": 30
+  },
+
   // Spatial Reasoning
   {
     "qid": "SPA_E_001",
@@ -103,6 +172,29 @@ export const questionBank: Question[] = [
     "answer": "6",
     "time_limit_sec": 90
   },
+  {
+    "qid": "SPA_H_004",
+    "domain": "spatial",
+    "difficulty": 0.8,
+    "discrimination": 0.85,
+    "guess_factor": 0.25,
+    "question": "A man walks 5km East, then 5km North, then 5km West. How far is he from his starting point?",
+    "options": ["0km", "5km", "10km", "15km"],
+    "answer": "5km",
+    "time_limit_sec": 45
+  },
+   {
+    "qid": "SPA_M_005",
+    "domain": "spatial",
+    "difficulty": 0.6,
+    "discrimination": 0.7,
+    "guess_factor": 0.25,
+    "question": "Which of the following is a mirror image of the word 'REFLECTION'?",
+    "options": ["NOITCELFER", "ЯƎᖷ⅃ƎƆ⊥ION", "REFLEC┴ION", "ИOITƆƎLᖷƎЯ"],
+    "answer": "ИOITƆƎLᖷƎЯ",
+    "time_limit_sec": 50
+  },
+
   // Numerical Reasoning
   {
     "qid": "NUM_E_001",
@@ -137,6 +229,29 @@ export const questionBank: Question[] = [
     "answer": "5 minutes",
     "time_limit_sec": 70
   },
+   {
+    "qid": "NUM_M_004",
+    "domain": "numerical",
+    "difficulty": 0.55,
+    "discrimination": 0.71,
+    "guess_factor": 0.25,
+    "question": "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?",
+    "options": ["$0.10", "$0.05", "$1.00", "$0.50"],
+    "answer": "$0.05",
+    "time_limit_sec": 60
+  },
+  {
+    "qid": "NUM_E_005",
+    "domain": "numerical",
+    "difficulty": 0.3,
+    "discrimination": 0.6,
+    "guess_factor": 0.25,
+    "question": "A farmer has 17 sheep and all but 9 die. How many are left?",
+    "options": ["9", "8", "17", "26"],
+    "answer": "9",
+    "time_limit_sec": 30
+  },
+
   // Working Memory
   {
     "qid": "MEM_E_001",
@@ -172,50 +287,6 @@ export const questionBank: Question[] = [
     "time_limit_sec": 35
   },
   {
-    "qid": "LOG_M_004",
-    "domain": "logical",
-    "difficulty": 0.6,
-    "discrimination": 0.72,
-    "guess_factor": 0.25,
-    "question": "All roses are flowers. Some flowers fade quickly. Therefore...",
-    "options": ["All roses fade quickly", "Some roses fade quickly", "No roses fade quickly", "We cannot be certain if any roses fade quickly"],
-    "answer": "We cannot be certain if any roses fade quickly",
-    "time_limit_sec": 50
-  },
-  {
-    "qid": "PAT_M_004",
-    "domain": "pattern",
-    "difficulty": 0.5,
-    "discrimination": 0.68,
-    "guess_factor": 0.25,
-    "question": "Which of the following does not belong: Violin, Flute, Cello, Guitar",
-    "options": ["Violin", "Flute", "Cello", "Guitar"],
-    "answer": "Flute",
-    "time_limit_sec": 35
-  },
-  {
-    "qid": "NUM_M_004",
-    "domain": "numerical",
-    "difficulty": 0.55,
-    "discrimination": 0.71,
-    "guess_factor": 0.25,
-    "question": "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?",
-    "options": ["$0.10", "$0.05", "$1.00", "$0.50"],
-    "answer": "$0.05",
-    "time_limit_sec": 60
-  },
-  {
-    "qid": "SPA_H_004",
-    "domain": "spatial",
-    "difficulty": 0.8,
-    "discrimination": 0.85,
-    "guess_factor": 0.25,
-    "question": "A man walks 5km East, then 5km North, then 5km West. How far is he from his starting point?",
-    "options": ["0km", "5km", "10km", "15km"],
-    "answer": "5km",
-    "time_limit_sec": 45
-  },
-  {
     "qid": "MEM_H_004",
     "domain": "memory",
     "difficulty": 0.85,
@@ -225,5 +296,16 @@ export const questionBank: Question[] = [
     "options": ["8", "5", "2", "9"],
     "answer": "2",
     "time_limit_sec": 30
+  },
+  {
+    "qid": "MEM_M_005",
+    "domain": "memory",
+    "difficulty": 0.7,
+    "discrimination": 0.75,
+    "guess_factor": 0.25,
+    "question": "Memorize the following address: 1234 Oak St. Anytown, USA. What was the street name?",
+    "options": ["Oak St.", "Anytown", "1234", "USA"],
+    "answer": "Oak St.",
+    "time_limit_sec": 25
   }
 ];
