@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { differenceInDays } from 'date-fns';
-import { Brain, BrainCircuit, HelpCircle, History, Shield, Trophy } from 'lucide-react';
+import { Brain, BrainCircuit, HelpCircle, History, LogOut, MoreVertical, Shield, Trophy, User as UserIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { TestAttempt, UserProfile } from '@/lib/types';
-import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory } from '@/lib/store';
+import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory, clearUserData } from '@/lib/store';
 import { Logo } from '@/components/Logo';
 
 const RETAKE_COOLDOWN_DAYS = 7;
@@ -56,6 +57,11 @@ export default function DashboardPage() {
       </div>
     );
   }
+  
+  const handleSignOut = () => {
+    clearUserData();
+    router.replace('/onboarding');
+  };
 
   const lastRankedAttempt = history.find(a => !a.isPractice);
 
@@ -79,7 +85,32 @@ export default function DashboardPage() {
       <header className="p-4 border-b">
          <div className="container mx-auto flex justify-between items-center">
             <Logo/>
-            <span className="font-medium">Welcome, {user.name}!</span>
+            <div className="flex items-center gap-4">
+              <span className="font-medium hidden sm:inline">Welcome, {user.name}!</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-5 w-5" />
+                    <span className="sr-only">Open user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>User Details</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
          </div>
       </header>
       <main className="container mx-auto p-4 md:p-8">
@@ -97,7 +128,7 @@ export default function DashboardPage() {
                     icon={<Trophy className="h-4 w-4 text-muted-foreground" />}
                     title="Best Valid IQ"
                     value={`${displayBestScore}`}
-                    description="Your highest valid score (ranked or practice)."
+                    description="Your highest valid score."
                   />
                   <StatCard 
                     icon={<History className="h-4 w-4 text-muted-foreground" />}

@@ -4,12 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 const USER_PROFILE_KEY = 'cogniassess_user_profile';
 const TEST_HISTORY_KEY = 'cogniassess_test_history';
 
-// NOTE: This is simple obfuscation (base64 encoding), not true encryption.
-// Secure client-side encryption without a backend for key management is not feasible.
+// Using btoa for simple obfuscation. In a real-world scenario, proper encryption or
+// server-side storage would be necessary for sensitive data.
 const encode = (data: any): string => {
   if (typeof window === 'undefined') return '';
   try {
-    // btoa can fail on non-latin characters. encodeURIComponent handles this.
     return window.btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   } catch (e) {
     console.error("Failed to encode data for localStorage", e);
@@ -20,29 +19,28 @@ const encode = (data: any): string => {
 const decode = <T>(encodedData: string | null): T | null => {
   if (typeof window === 'undefined' || !encodedData) return null;
   try {
-    // atob can fail on non-latin characters. decodeURIComponent handles this.
     return JSON.parse(decodeURIComponent(escape(window.atob(encodedData)))) as T;
   } catch (e) {
     console.error("Failed to decode data from localStorage", e);
     
-    // Clear corrupted data if possible
+    // If decoding fails, try to clear the corrupted item
     try {
         if (encodedData) {
-            const partiallyDecoded = window.atob(encodedData);
-            if (partiallyDecoded.includes('email')) { // Heuristic for user profile
+            // A simple heuristic to guess which key is corrupted
+            if (encodedData.includes('email') && encodedData.includes('name')) {
                  localStorage.removeItem(USER_PROFILE_KEY);
             }
-            if (partiallyDecoded.includes('testId') || partiallyDecoded.includes('iqScore')) { // Heuristic for test history
+             else if (encodedData.includes('testId') || encodedData.includes('iqScore')) {
                  localStorage.removeItem(TEST_HISTORY_KEY);
             }
         }
     } catch (clearError) {
         console.error("Failed to clear corrupted localStorage item", clearError);
     }
-
     return null;
   }
 };
+
 
 // --- User Profile ---
 
@@ -56,6 +54,12 @@ export const getUserProfile = (): UserProfile | null => {
   const data = localStorage.getItem(USER_PROFILE_KEY);
   return decode<UserProfile>(data);
 };
+
+export const clearUserData = (): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(USER_PROFILE_KEY);
+  localStorage.removeItem(TEST_HISTORY_KEY);
+}
 
 // --- Test History ---
 
@@ -83,29 +87,15 @@ export const getLatestTestAttempt = (): TestAttempt | null => {
 };
 
 export const getBestValidTestAttempt = (): TestAttempt | null => {
-  const history = getTestHistory();
-  
-  const validRankedAttempts = history.filter(
-    (attempt) => attempt.validityReport.status === 'High' && !attempt.isPractice
-  );
+    const history = getTestHistory();
+    
+    const validAttempts = history.filter(
+        (attempt) => attempt.validityReport.status === 'High'
+    );
 
-  if (validRankedAttempts.length > 0) {
-      return validRankedAttempts.reduce((best, current) =>
-        current.iqScore > best.iqScore ? current : best
-      );
-  }
+    if (validAttempts.length === 0) return null;
 
-  // If no valid ranked attempts, find the best valid practice attempt.
-  const validPracticeAttempts = history.filter(
-    (attempt) => attempt.validityReport.status === 'High' && attempt.isPractice
-  );
-  
-  if (validPracticeAttempts.length > 0) {
-      return validPracticeAttempts.reduce((best, current) =>
+    return validAttempts.reduce((best, current) =>
         current.iqScore > best.iqScore ? current : best
-      );
-  }
-  
-  // If no high-validity attempts at all, return null.
-  return null;
+    );
 };
