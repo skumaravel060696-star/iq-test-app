@@ -6,8 +6,7 @@ import { differenceInDays } from 'date-fns';
 import { Brain, BrainCircuit, HelpCircle, History, Shield, Trophy } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TestAttempt, UserProfile } from '@/lib/types';
 import { getBestValidTestAttempt, getLatestTestAttempt, getUserProfile, getTestHistory } from '@/lib/store';
 import { Logo } from '@/components/Logo';
@@ -119,7 +118,7 @@ export default function DashboardPage() {
               <Button onClick={handleStartTest} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
                 {getTestHistory().length > 0 ? 'Start Practice Test' : 'Start First Test'}
               </Button>
-              {!canRetake && latestAttempt && (
+              {!canRetake && latestAttempt && !latestAttempt.isPractice && (
                 <p className="text-sm text-muted-foreground pt-2">
                   You can take a new ranked test in {RETAKE_COOLDOWN_DAYS - daysSinceLastAttempt} day(s). Practice tests are always available.
                 </p>
@@ -134,7 +133,7 @@ export default function DashboardPage() {
               <CardContent className="space-y-2 text-sm text-muted-foreground">
                   <p><strong className="text-foreground">IQ Score:</strong> This is a normalized score based on your performance relative to your age group. The average IQ is 100.</p>
                   <p><strong className="text-foreground">Test Validity:</strong> This reflects our confidence that the score accurately represents your ability. Factors like distractions or unusually fast answers can lower validity.</p>
-                   <p><strong className="text-foreground">Practice Attempts:</strong> Subsequent tests are considered practice and will not overwrite your best valid score from a non-practice attempt.</p>
+                   <p><strong className="text-foreground">Practice & Ranked Attempts:</strong> Your first test is a ranked attempt. After that, you can take a new ranked attempt every 7 days to update your best score. Any other tests taken are considered practice and won't affect your official best score.</p>
                   <p><strong className="text-foreground">Disclaimer:</strong> This is an informational tool, not a clinical diagnosis. For a formal assessment, please consult a qualified psychologist.</p>
               </CardContent>
           </Card>

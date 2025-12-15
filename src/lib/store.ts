@@ -53,11 +53,6 @@ export const getTestHistory = (): TestAttempt[] => {
 
 export const addTestAttempt = (attempt: TestAttempt): void => {
   const history = getTestHistory();
-  // Prevent overwriting best score with practice attempt
-  const bestAttempt = getBestValidTestAttempt();
-  if (attempt.isPractice && bestAttempt && attempt.iqScore < bestAttempt.iqScore) {
-     // We could store it but decide not to show it as the "latest" in some contexts
-  }
   const newHistory = [attempt, ...history];
   localStorage.setItem(TEST_HISTORY_KEY, encode(newHistory));
 };
@@ -78,17 +73,22 @@ export const getBestValidTestAttempt = (): TestAttempt | null => {
     (attempt) => attempt.validityReport.status === 'High' && !attempt.isPractice
   );
 
-  if (validAttempts.length === 0) {
-    const validPracticeAttempts = history.filter(
-      (attempt) => attempt.validityReport.status === 'High' && attempt.isPractice
-    );
-     if (validPracticeAttempts.length === 0) return null;
-     return validPracticeAttempts.reduce((best, current) =>
-      current.iqScore > best.iqScore ? current : best
-    );
+  if (validAttempts.length > 0) {
+      return validAttempts.reduce((best, current) =>
+        current.iqScore > best.iqScore ? current : best
+      );
   }
-
-  return validAttempts.reduce((best, current) =>
-    current.iqScore > best.iqScore ? current : best
+  
+  // Fallback to best practice attempt if no valid non-practice attempts exist
+  const practiceAttempts = history.filter(
+    (attempt) => attempt.validityReport.status === 'High'
   );
+
+  if (practiceAttempts.length > 0) {
+      return practiceAttempts.reduce((best, current) =>
+        current.iqScore > best.iqScore ? current : best
+      );
+  }
+  
+  return null;
 };

@@ -10,11 +10,16 @@
 import { z } from 'zod';
 import type { Question, QuestionDomain } from '@/lib/types';
 
-
 // Define the structure for a question
 const QuestionSchema = z.object({
   qid: z.string().describe('Unique question identifier'),
-  domain: z.string().describe('Domain of the question (e.g., logical, pattern)'),
+  domain: z.nativeEnum({
+    logical: 'logical',
+    pattern: 'pattern',
+    spatial: 'spatial',
+    numerical: 'numerical',
+    memory: 'memory'
+  }),
   difficulty: z.number().describe('Difficulty level of the question (0-1)'),
   discrimination: z.number().describe('Discrimination index of the question'),
   guess_factor: z.number().describe('Guess factor of the question'),
@@ -27,13 +32,7 @@ const QuestionSchema = z.object({
 // Define the input schema for the dynamic test generation
 const GenerateDynamicTestInputSchema = z.object({
   ageBand: z.string().describe('The age band of the user (e.g., 18-25)'),
-  domainMix: z.record(z.nativeEnum(Object.values({
-    logical: 'logical',
-    pattern: 'pattern',
-    spatial: 'spatial',
-    numerical: 'numerical',
-    memory: 'memory'
-  }) as [string, ...string[]]), z.number())
+  domainMix: z.record(QuestionSchema.shape.domain, z.number())
   .describe('The desired domain mix for the test'),
   questionBank: z.array(QuestionSchema).describe('The question bank to select questions from'),
   numberOfQuestions: z.number().describe('The total number of questions to generate'),
