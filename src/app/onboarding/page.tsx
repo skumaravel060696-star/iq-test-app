@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -25,7 +26,7 @@ import { Logo } from '@/components/Logo';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  email: z.string().email({ message: 'Invalid email address.' }),
   age: z.coerce.number().min(5, { message: 'You must be at least 5 years old.' }).max(120),
   consent: z.literal<boolean>(true, {
     errorMap: () => ({ message: 'You must accept the terms to continue.' }),
