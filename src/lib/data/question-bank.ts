@@ -194,6 +194,17 @@ export const questionBank: Question[] = [
     "answer": "ИOITƆƎLᖷƎЯ",
     "time_limit_sec": 50
   },
+  {
+    "qid": "SPA_E_006",
+    "domain": "spatial",
+    "difficulty": 0.4,
+    "discrimination": 0.65,
+    "guess_factor": 0.25,
+    "question": "You are facing North and turn right, then turn right again, then turn left. Which direction are you facing now?",
+    "options": ["North", "South", "East", "West"],
+    "answer": "West",
+    "time_limit_sec": 35
+  },
 
   // Numerical Reasoning
   {
@@ -251,6 +262,17 @@ export const questionBank: Question[] = [
     "answer": "9",
     "time_limit_sec": 30
   },
+  {
+    "qid": "NUM_H_006",
+    "domain": "numerical",
+    "difficulty": 0.9,
+    "discrimination": 0.88,
+    "guess_factor": 0.25,
+    "question": "A lily pad in a pond doubles in size every day. If it takes 48 days for the lily pad to cover the entire pond, how long would it take for the lily pad to cover half the pond?",
+    "options": ["24 days", "47 days", "36 days", "46 days"],
+    "answer": "47 days",
+    "time_limit_sec": 60
+  },
 
   // Working Memory
   {
@@ -259,7 +281,7 @@ export const questionBank: Question[] = [
     "difficulty": 0.3,
     "discrimination": 0.6,
     "guess_factor": 0.25,
-    "question": "Remember this sequence: A-1-B-2. What was the second number?",
+    "question": "Remember this sequence: A-1-B-2. What was the second item?",
     "options": ["A", "1", "B", "2"],
     "answer": "1",
     "time_limit_sec": 20
@@ -307,5 +329,16 @@ export const questionBank: Question[] = [
     "options": ["Oak St.", "Anytown", "1234", "USA"],
     "answer": "Oak St.",
     "time_limit_sec": 25
+  },
+  {
+    "qid": "MEM_E_006",
+    "domain": "memory",
+    "difficulty": 0.4,
+    "discrimination": 0.62,
+    "guess_factor": 0.25,
+    "question": "Listen to the sequence: 5, 9, 3. Repeat it backwards.",
+    "options": ["3, 9, 5", "5, 9, 3", "9, 3, 5", "3, 5, 9"],
+    "answer": "3, 9, 5",
+    "time_limit_sec": 20
   }
 ];

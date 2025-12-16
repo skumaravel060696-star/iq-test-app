@@ -90,7 +90,7 @@ export const getBestValidTestAttempt = (): TestAttempt | null => {
     const history = getTestHistory();
     
     const validAttempts = history.filter(
-        (attempt) => attempt.validityReport.status === 'High'
+        (attempt) => !attempt.isPractice && attempt.validityReport.status === 'High'
     );
 
     if (validAttempts.length === 0) return null;
