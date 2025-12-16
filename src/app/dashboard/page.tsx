@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { differenceInDays } from 'date-fns';
-import { BrainCircuit, HelpCircle, LogOut, MoreVertical, User as UserIcon } from 'lucide-react';
+import { BrainCircuit, HelpCircle, LogOut, MoreVertical, User as UserIcon, Download } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +33,11 @@ export default function DashboardPage() {
     }
   }, [router]);
 
+  const handleSignOut = () => {
+    clearUserData();
+    router.replace('/onboarding');
+  };
+  
   if (!isClient || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -41,11 +46,6 @@ export default function DashboardPage() {
     );
   }
   
-  const handleSignOut = () => {
-    clearUserData();
-    router.replace('/onboarding');
-  };
-
   const lastRankedAttempt = history.find(a => !a.isPractice);
 
   const daysSinceLastRankedAttempt = lastRankedAttempt
@@ -80,6 +80,10 @@ export default function DashboardPage() {
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>User Details</span>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => alert('This is a placeholder. APK download is not available.')}>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Download APK</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>

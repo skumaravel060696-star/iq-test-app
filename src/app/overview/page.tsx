@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Brain, BrainCircuit, History, LogOut, MoreVertical, Shield, Trophy, User as UserIcon, ArrowLeft } from 'lucide-react';
+import { Brain, BrainCircuit, History, LogOut, MoreVertical, Shield, Trophy, User as UserIcon, ArrowLeft, Download } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,6 +91,10 @@ export default function OverviewPage() {
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>User Details</span>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => alert('This is a placeholder. APK download is not available.')}>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Download APK</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
