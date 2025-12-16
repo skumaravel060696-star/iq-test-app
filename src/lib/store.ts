@@ -1,8 +1,8 @@
 import type { UserProfile, TestAttempt } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
-const USER_PROFILE_KEY = 'cogniassess_user_profile';
-const TEST_HISTORY_KEY = 'cogniassess_test_history';
+const USER_PROFILE_KEY = 'intquo_user_profile';
+const TEST_HISTORY_KEY = 'intquo_test_history';
 
 // Using btoa for simple obfuscation. In a real-world scenario, proper encryption or
 // server-side storage would be necessary for sensitive data.

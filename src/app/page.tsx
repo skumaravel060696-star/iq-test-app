@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
       <BrainCircuit className="h-12 w-12 animate-pulse text-primary" />
-      <p className="mt-4 text-muted-foreground">Initializing CogniAssess...</p>
+      <p className="mt-4 text-muted-foreground">Initializing Intquo...</p>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'CogniAssess - Offline IQ Test',
+  title: 'Intquo - Offline IQ Test',
   description: 'A production-grade offline IQ test mobile application with scientifically defensible scoring, age-based calibration, and anti-cheat mechanisms.',
 };
 

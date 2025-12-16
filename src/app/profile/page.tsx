@@ -60,7 +60,7 @@ export default function ProfilePage() {
         <Card className="w-full max-w-lg">
           <CardHeader>
             <CardTitle>User Profile</CardTitle>
-            <CardDescription>Your CogniAssess account details.</CardDescription>
+            <CardDescription>Your Intquo account details.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <DetailItem icon={<User />} label="Full Name" value={user.name} />
