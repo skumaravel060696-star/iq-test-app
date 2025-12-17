@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { differenceInDays } from 'date-fns';
 
-import type { AnswerRecord, GeneratedQuestion, Question, TestAttempt, UserProfile } from '@/lib/types';
+import type { AnswerRecord, GeneratedQuestion, Question, TestAttempt, UserProfile, QuestionDomain } from '@/lib/types';
 import { usePageVisibility } from '@/hooks/use-page-visibility';
 import { calculateAbilityScore, normalizeIqScore } from '@/lib/engine/scoring';
 import { calculateValidity } from '@/lib/engine/validity';
@@ -20,11 +20,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Logo } from '@/components/Logo';
 import { generateDynamicTest } from '@/ai/flows/generate-dynamic-test';
+import type { QuestionBanks } from './page';
+
 
 const NUMBER_OF_QUESTIONS = 20;
+const NUMBER_OF_PRACTICE_QUESTIONS = 10;
 const RETAKE_COOLDOWN_DAYS = 7;
 
-const DOMAIN_MIX = {
+const DOMAIN_MIX: Record<QuestionDomain, number> = {
   logical: 0.3,
   pattern: 0.25,
   spatial: 0.20,
@@ -125,7 +128,7 @@ function QuestionCard({
 
 // --- Main Client Component ---
 
-export function QuizClient({ questionBank }: { questionBank: Question[] }) {
+export function QuizClient({ questionBanks }: { questionBanks: QuestionBanks }) {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [test, setTest] = useState<GeneratedQuestion[] | null>(null);
@@ -152,7 +155,8 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
       : RETAKE_COOLDOWN_DAYS + 1;
     
     // It's practice if it's not their first test AND they can't take a ranked one yet
-    setIsPractice(history.length > 0 && daysSinceLastRankedAttempt < RETAKE_COOLDOWN_DAYS);
+    const practice = history.length > 0 && daysSinceLastRankedAttempt < RETAKE_COOLDOWN_DAYS;
+    setIsPractice(practice);
 
   }, [router]);
 
@@ -160,34 +164,57 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
     if (user && !test) {
       const getTest = async () => {
         try {
-          const history = getTestHistory();
-          let currentDomainMix = { ...DOMAIN_MIX };
+          let questionsForTest: Question[] = [];
+          let testSize = NUMBER_OF_QUESTIONS;
 
-          // Shuffle domain mix for any retake (practice or ranked)
-          if (history.length > 0) {
-              const domains = shuffle(Object.keys(currentDomainMix));
-              const percentages = shuffle(Object.values(currentDomainMix));
-              currentDomainMix = domains.reduce((acc, domain, index) => {
-                acc[domain as keyof typeof DOMAIN_MIX] = percentages[index];
-                return acc;
-              }, {} as typeof DOMAIN_MIX);
+          if (isPractice) {
+            questionsForTest = shuffle(questionBanks.practice).slice(0, NUMBER_OF_PRACTICE_QUESTIONS);
+            testSize = NUMBER_OF_PRACTICE_QUESTIONS;
+
+             const { questions } = await generateDynamicTest({
+                ageBand: user.age.toString(),
+                domainMix: { logical: 0.2, pattern: 0.2, spatial: 0.2, numerical: 0.2, memory: 0.2},
+                questionBank: questionsForTest,
+                numberOfQuestions: testSize
+             });
+             setTest(questions);
+
+          } else {
+             const history = getTestHistory();
+             let currentDomainMix = { ...DOMAIN_MIX };
+
+              // Shuffle domain mix for any retake (practice or ranked)
+              if (history.length > 0) {
+                  const domains = shuffle(Object.keys(currentDomainMix));
+                  const percentages = shuffle(Object.values(currentDomainMix));
+                  currentDomainMix = domains.reduce((acc, domain, index) => {
+                    acc[domain as keyof typeof DOMAIN_MIX] = percentages[index];
+                    return acc;
+                  }, {} as typeof DOMAIN_MIX);
+              }
+
+              const seenQuestionIds = new Set(history.flatMap(attempt => attempt.questions.map(q => q.qid)));
+              
+              let combinedBank: Question[] = [];
+              for (const domain in DOMAIN_MIX) {
+                  const bank = questionBanks[domain as QuestionDomain];
+                  let availableQuestions = bank.filter(q => !seenQuestionIds.has(q.qid));
+                  
+                  if (availableQuestions.length < Math.round(testSize * currentDomainMix[domain as QuestionDomain])) {
+                      availableQuestions = bank; // Reset if pool is exhausted
+                  }
+                  combinedBank.push(...availableQuestions);
+              }
+
+              const { questions } = await generateDynamicTest({
+                ageBand: user.age.toString(), // Simplified for example
+                domainMix: currentDomainMix,
+                questionBank: combinedBank,
+                numberOfQuestions: testSize
+              });
+              setTest(questions);
           }
 
-          const seenQuestionIds = new Set(history.flatMap(attempt => attempt.questions.map(q => q.qid)));
-          let availableQuestions = questionBank.filter(q => !seenQuestionIds.has(q.qid));
-          
-          // If all questions have been seen, reset and allow repeats
-          if (availableQuestions.length < NUMBER_OF_QUESTIONS) {
-              availableQuestions = questionBank;
-          }
-
-          const { questions } = await generateDynamicTest({
-            ageBand: user.age.toString(), // Simplified for example
-            domainMix: currentDomainMix,
-            questionBank: availableQuestions,
-            numberOfQuestions: NUMBER_OF_QUESTIONS
-          });
-          setTest(questions);
           setTestStartTime(Date.now());
           setQuestionStartTime(Date.now());
         } catch (error) {
@@ -197,7 +224,7 @@ export function QuizClient({ questionBank }: { questionBank: Question[] }) {
       }
       getTest();
     }
-  }, [user, test, questionBank, router]);
+  }, [user, test, questionBanks, router, isPractice]);
   
   const finishTest = useCallback(async (finalAnswers: AnswerRecord[]) => {
     if (!user || !test || isFinishing) return;
