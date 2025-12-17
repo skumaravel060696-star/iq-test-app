@@ -2,7 +2,7 @@
 import type { Question } from '@/lib/types';
 
 export const questionBank: Question[] = [
-  // Logical
+  // Logical Reasoning (LOG)
   {
     "qid": "LOG_E_001",
     "domain": "logical",
@@ -69,8 +69,41 @@ export const questionBank: Question[] = [
     "answer": "Cannot be determined",
     "time_limit_sec": 55
   },
+  {
+    "qid": "LOG_M_007",
+    "domain": "logical",
+    "difficulty": 0.55,
+    "discrimination": 0.7,
+    "guess_factor": 0.25,
+    "question": "If 'apple' is to 'fruit' as 'oak' is to...",
+    "options": ["tree", "leaf", "wood", "acorn"],
+    "answer": "tree",
+    "time_limit_sec": 30
+  },
+  {
+    "qid": "LOG_E_008",
+    "domain": "logical",
+    "difficulty": 0.2,
+    "discrimination": 0.58,
+    "guess_factor": 0.25,
+    "question": "Which of the following words is most opposite to 'HOT'?",
+    "options": ["Warm", "Cold", "Cool", "Icy"],
+    "answer": "Cold",
+    "time_limit_sec": 20
+  },
+  {
+    "qid": "LOG_H_009",
+    "domain": "logical",
+    "difficulty": 0.85,
+    "discrimination": 0.82,
+    "guess_factor": 0.25,
+    "question": "There are five houses in a row. The blue house is to the right of the red house and to the left of the green house. The yellow house is to the right of the green house. The orange house is to the right of the blue house but not next to it. Which house is in the middle?",
+    "options": ["Red", "Blue", "Green", "Yellow"],
+    "answer": "Green",
+    "time_limit_sec": 70
+  },
 
-  // Pattern Recognition
+  // Pattern Recognition (PAT)
   {
     "qid": "PAT_E_001",
     "domain": "pattern",
@@ -88,7 +121,7 @@ export const questionBank: Question[] = [
     "difficulty": 0.6,
     "discrimination": 0.75,
     "guess_factor": 0.25,
-    "question": "Which shape is the odd one out?",
+    "question": "Which shape is the odd one out based on its properties?",
     "options": ["Square", "Triangle", "Circle", "Rectangle"],
     "answer": "Circle",
     "time_limit_sec": 40
@@ -137,8 +170,41 @@ export const questionBank: Question[] = [
     "answer": "13",
     "time_limit_sec": 30
   },
+  {
+    "qid": "PAT_M_007",
+    "domain": "pattern",
+    "difficulty": 0.65,
+    "discrimination": 0.72,
+    "guess_factor": 0.25,
+    "question": "AZ, CX, FU, ?",
+    "options": ["IR", "IV", "JQ", "KP"],
+    "answer": "JQ",
+    "time_limit_sec": 50
+  },
+  {
+    "qid": "PAT_E_008",
+    "domain": "pattern",
+    "difficulty": 0.3,
+    "discrimination": 0.6,
+    "guess_factor": 0.25,
+    "question": "Which set of letters is the odd one out?",
+    "options": ["AEI", "UOA", "EIO", "IUX"],
+    "answer": "IUX",
+    "time_limit_sec": 30
+  },
+  {
+    "qid": "PAT_H_009",
+    "domain": "pattern",
+    "difficulty": 0.75,
+    "discrimination": 0.8,
+    "guess_factor": 0.25,
+    "question": "What comes next in the sequence: O, T, T, F, F, S, S, ...?",
+    "options": ["E", "N", "T", "O"],
+    "answer": "E",
+    "time_limit_sec": 60
+  },
 
-  // Spatial Reasoning
+  // Spatial Reasoning (SPA)
   {
     "qid": "SPA_E_001",
     "domain": "spatial",
@@ -205,8 +271,41 @@ export const questionBank: Question[] = [
     "answer": "West",
     "time_limit_sec": 35
   },
+  {
+    "qid": "SPA_M_007",
+    "domain": "spatial",
+    "difficulty": 0.7,
+    "discrimination": 0.75,
+    "guess_factor": 0.25,
+    "question": "A paper is folded in half, and then in half again. A hole is punched through the center. How many holes will there be when the paper is unfolded?",
+    "options": ["1", "2", "3", "4"],
+    "answer": "4",
+    "time_limit_sec": 40
+  },
+  {
+    "qid": "SPA_E_008",
+    "domain": "spatial",
+    "difficulty": 0.35,
+    "discrimination": 0.6,
+    "guess_factor": 0.25,
+    "question": "Which of the following shapes is three-dimensional?",
+    "options": ["Square", "Circle", "Triangle", "Cone"],
+    "answer": "Cone",
+    "time_limit_sec": 20
+  },
+  {
+    "qid": "SPA_H_009",
+    "domain": "spatial",
+    "difficulty": 0.9,
+    "discrimination": 0.88,
+    "guess_factor": 0.25,
+    "question": "If a piece of paper is folded in half vertically, then in half horizontally, and a corner is cut off, what will the unfolded paper look like?",
+    "options": ["A hole in the middle", "A notch on each side", "A notch on each corner", "A diamond hole in the middle"],
+    "answer": "A diamond hole in the middle",
+    "time_limit_sec": 80
+  },
 
-  // Numerical Reasoning
+  // Numerical Reasoning (NUM)
   {
     "qid": "NUM_E_001",
     "domain": "numerical",
@@ -273,8 +372,41 @@ export const questionBank: Question[] = [
     "answer": "47 days",
     "time_limit_sec": 60
   },
+  {
+    "qid": "NUM_E_007",
+    "domain": "numerical",
+    "difficulty": 0.25,
+    "discrimination": 0.5,
+    "guess_factor": 0.25,
+    "question": "A book has 250 pages. You read 50 pages on Monday and half of the remaining pages on Tuesday. How many pages are left to read?",
+    "options": ["100", "125", "150", "75"],
+    "answer": "100",
+    "time_limit_sec": 45
+  },
+  {
+    "qid": "NUM_M_008",
+    "domain": "numerical",
+    "difficulty": 0.5,
+    "discrimination": 0.68,
+    "guess_factor": 0.25,
+    "question": "The sum of two numbers is 30 and their difference is 4. What is the smaller number?",
+    "options": ["11", "13", "15", "17"],
+    "answer": "13",
+    "time_limit_sec": 50
+  },
+  {
+    "qid": "NUM_H_009",
+    "domain": "numerical",
+    "difficulty": 0.8,
+    "discrimination": 0.8,
+    "guess_factor": 0.25,
+    "question": "A baker has 240 cookies. 1/3 are chocolate chip, 1/4 are oatmeal, and the rest are sugar cookies. How many sugar cookies are there?",
+    "options": ["80", "60", "100", "140"],
+    "answer": "100",
+    "time_limit_sec": 65
+  },
 
-  // Working Memory
+  // Working Memory (MEM)
   {
     "qid": "MEM_E_001",
     "domain": "memory",
@@ -340,5 +472,38 @@ export const questionBank: Question[] = [
     "options": ["3, 9, 5", "5, 9, 3", "9, 3, 5", "3, 5, 9"],
     "answer": "3, 9, 5",
     "time_limit_sec": 20
+  },
+    {
+    "qid": "MEM_M_007",
+    "domain": "memory",
+    "difficulty": 0.65,
+    "discrimination": 0.7,
+    "guess_factor": 0.25,
+    "question": "Remember this shopping list: Milk, Bread, Eggs, Butter. Which item was second on the list?",
+    "options": ["Milk", "Bread", "Eggs", "Butter"],
+    "answer": "Bread",
+    "time_limit_sec": 22
+  },
+  {
+    "qid": "MEM_E_008",
+    "domain": "memory",
+    "difficulty": 0.3,
+    "discrimination": 0.55,
+    "guess_factor": 0.25,
+    "question": "Remember the code: X-Y-Z. What is the code?",
+    "options": ["X-Y-Z", "X-Z-Y", "Y-X-Z", "Z-Y-X"],
+    "answer": "X-Y-Z",
+    "time_limit_sec": 15
+  },
+  {
+    "qid": "MEM_H_009",
+    "domain": "memory",
+    "difficulty": 0.8,
+    "discrimination": 0.8,
+    "guess_factor": 0.25,
+    "question": "Follow the instructions: Touch your nose, then your left ear, then your right knee. What was the second action?",
+    "options": ["Touch nose", "Touch left ear", "Touch right knee", "Touch right ear"],
+    "answer": "Touch left ear",
+    "time_limit_sec": 30
   }
 ];
